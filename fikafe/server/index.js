@@ -17,7 +17,7 @@ wssTTT.on("connection", function connection(ws) {
   ws.on("message", function incoming(data) {
   
       console.log(JSON.parse(data))
-  
+      
     wssTTT.clients.forEach(function each(client) {
       if (client !== ws && client.readyState === WebSocket.OPEN) {
         client.send(data)
