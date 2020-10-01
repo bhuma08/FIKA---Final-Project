@@ -1,18 +1,21 @@
-import React, { Component } from "react";
+import React from "react";
 import ChatInput from "./ChatInput";
 import ChatMessage from "./ChatMessage";
+import UserMessage from "./UserMessage";
 import { getUser, getChat } from "../Actions/actions";
 import { connect } from "react-redux";
+import "../styles/Userchat.css";
 const URL = "ws://localhost:3030";
-class Chat extends Component {
+
+class Chat extends React.Component {
   state = {
-    username: this.props.user.userData.username,
-    message: this.props.user.message,
+    message: [],
   };
   ws = new WebSocket(URL);
   componentDidMount() {
     this.props.getUser();
-    this.props.getChat();
+    // this.props.getChat();
+    this.setState({ message: this.props.user.message });
     this.ws.onopen = () => {
       // on connecting, log it to the console
       console.log("A user has connected");
@@ -30,8 +33,19 @@ class Chat extends Component {
       });
     };
   }
-  addMessage = (message) =>
-    this.setState((state) => ({ message: [message, ...state.message] }));
+  componentDidUpdate(prevProps, PrevState) {
+    if (PrevState.message !== this.state.message) {
+      // this.setState({ message: this.props.getChat() });
+      this.props.getChat();
+      this.setChat();
+    }
+  }
+  setChat = () => {
+    this.setState({ message: this.props.user.message });
+  };
+  addMessage = (data) =>
+    this.setState((state) => ({ message: [...state.message, data] }));
+
   submitMessage = (messageString) => {
     // on submitting the ChatInput form, send the message, add it to the list and reset the input
     const message = {
@@ -51,25 +65,46 @@ class Chat extends Component {
     fetch("http://localhost:8000/core/message/", options).then((r) => r.json());
     this.ws.send(JSON.stringify(message));
     this.addMessage(message);
+    this.setChat();
   };
   render() {
-    console.log(this.props.user.message);
+    console.log(this.state.message);
+    const name = this.props.user.userData.username;
+    let message = this.props.user.message.map((message, index) =>
+      name !== message.username ? (
+        <ChatMessage
+          className="otherusers"
+          key={index}
+          message={message.message}
+          name={message.username}
+          time={message.created_at}
+        />
+      ) : (
+        <UserMessage
+          className="currentuser"
+          key={index}
+          message={message.message}
+          name={message.username}
+          time={message.created_at}
+        />
+      )
+    );
     return (
-      <div>
-        <label htmlFor="name">
-          Logged in as: {this.props.user.userData.username}
-        </label>
+      <div className="chatWrapper wrapper">
+        <div className="chatbox">{message}</div>
+        {/* //   {this.props.user.message.username.filter()}
+      //   if this.props.user.message.username
+      //   {this.state.message.map((message, index) => ( */}
+        {/* //     <ChatMessage */}
+        {/* //       key={index}
+      //       message={message.message}
+      //       name={message.username}
+      //     />
+      //   ))} */}
         <ChatInput
           ws={this.ws}
           onSubmitMessage={(messageString) => this.submitMessage(messageString)}
         />
-        {this.state.message.map((message, index) => (
-          <ChatMessage
-            key={index}
-            message={message.message}
-            name={message.username}
-          />
-        ))}
       </div>
     );
   }

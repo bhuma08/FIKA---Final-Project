@@ -11,23 +11,22 @@ import error500 from "./errorhandlers/error500";
 import Settings from "./Settings";
 import Footer from "./Footer";
 
-class App extends React.Component {
+class Home extends React.Component {
   render() {
     return (
-      <>
+      <div>
         <Nav />
         <Switch>
           <Route exact path="/home" component={DashBoard} />
           <Route path="/home/chat" component={Chat} />
           <Route path="/home/game" component={Game} />
           <Route path="/home/settings" component={Settings} />
-
           <Route component={NotFound404} />
           <Route component={error500} />
         </Switch>
         <Footer />
-      </>
+      </div>
     );
   }
 }
-export default App;
+export default Home;
